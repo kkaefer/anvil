@@ -42,8 +42,7 @@ Forge.prototype.compile = function() {
         this._dispatch,
         this._generate,
         this._dispatch,
-        this._write,
-        this._cleanup
+        this._write
     ], this._report);
 };
 
