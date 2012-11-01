@@ -1,30 +1,17 @@
 #!/usr/bin/env node
-var _ = require('underscore');
 var async = require('async');
-
-var Tree = require('./lib/tree');
 var Route = require('./lib/route');
 var Item = require('./lib/item');
-var Router = require('./lib/router');
-require('./lib/tools');
 
 module.exports = exports = Forge;
 function Forge() {
-    _.bindAll(this);
-
-    this.input = 'content';
-    this.output = 'output';
-
-    this.templates = {};
-    this.pendingItems = [];
-    this.items = _([]);
-    this.routes = [];
-    this.router = new Router(this.routes);
-    this.generators = [];
+    this._setup();
 }
 
-Forge.prototype.route = function(path, handler) {
-    this.router.push(new Route(path, handler));
+Forge.prototype.route = function(path) {
+    for (var i = 1; i < arguments.length; i++) {
+        this.router.push(new Route(path, arguments[i]));
+    }
 };
 
 Forge.prototype.skip = function(path) {
@@ -55,63 +42,13 @@ Forge.prototype.compile = function() {
         this._dispatch,
         this._generate,
         this._dispatch,
-        this._write
+        this._write,
+        this._cleanup
     ], this._report);
 };
 
 // === private ===
+require('./lib/forge');
+require('./lib/filters');
+require('./lib/tools');
 
-Forge.prototype._traverse = function(done) {
-    var app = this;
-    this.tree = new Tree(this.input);
-    this.tree.traverse(function(source, stat, done) {
-        var route = source.substring(app.tree.root.length);
-        var item = new Item({ route: route, source: source, stat: stat });
-        app.pendingItems.push(item);
-        done();
-    }, done);
-};
-
-Forge.prototype._dispatch = function(done) {
-    var app = this;
-
-    function iterate() {
-        if (!app.pendingItems.length) return done();
-        var item = app.pendingItems.shift();
-
-        item.load(function(err) {
-            if (err) item.reportError(err);
-            app.router.dispatch(item, function(err) {
-                if (err) item.reportError(err);
-                else if (!item.ignore) {
-                    app.items.push(item);
-                }
-                iterate();
-            });
-        });
-    }
-
-    iterate(null);
-};
-
-Forge.prototype._generate = function(done) {
-    async.forEachSeries(this.generators, function(generator, next) {
-        if (generator.length >= 1) {
-            generator(next);
-        } else {
-            generator();
-            next();
-        }
-    }, done);
-};
-
-Forge.prototype._write = function(done) {
-    var app = this;
-    async.forEachSeries(app.items.value(), function(item, next) {
-        item.write(app, next);
-    }, done);
-};
-
-Forge.prototype._report = function(err) {
-    console.warn('Completed in %dms', Date.now() - this.started);
-};
