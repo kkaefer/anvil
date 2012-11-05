@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 var async = require('async');
+var fs = require('fs');
+var path = require('path');
 var Route = require('./lib/route');
 var Item = require('./lib/item');
 
@@ -33,6 +35,19 @@ Forge.prototype.create = function(props) {
 
 Forge.prototype.template = function(name, fn) {
     this.templates[name] = fn;
+};
+
+Forge.prototype.loadTemplates = function(folder) {
+    folder = path.resolve(folder);
+    var files = fs.readdirSync(folder);
+    for (var i = 0; i < files.length; i++) {
+        var file = path.join(folder, files[i]);
+        var ext = path.extname(file);
+        if (ext in require.extensions && fs.statSync(file).isFile()) {
+            var name = path.basename(file, ext);
+            this.template(name, require(file));
+        }
+    }
 };
 
 Forge.prototype.compile = function() {
