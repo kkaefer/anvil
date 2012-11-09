@@ -54,7 +54,7 @@ Forge.prototype.generate = function(callback) {
 };
 
 Forge.prototype.create = function(props) {
-    var item = new Item(props);
+    var item = new Item(this, props);
     this.pendingItems.push(item);
 };
 
@@ -93,7 +93,7 @@ Forge.prototype._traverse = function(done) {
     this.tree = new Tree(this.input);
     this.tree.traverse(function(source, stat, done) {
         var route = source.substring(this.root.length);
-        var item = new Item({ route: route, source: source, stat: stat });
+        var item = new Item(app, { route: route, source: source, stat: stat });
         app.pendingItems.push(item);
         done();
     }, done);
@@ -133,9 +133,8 @@ Forge.prototype._generate = function(done) {
 };
 
 Forge.prototype._write = function(done) {
-    var app = this;
-    async.forEachSeries(app.items.value(), function(item, next) {
-        item.write(app, next);
+    async.forEachSeries(this.items.value(), function(item, next) {
+        item.write(next);
     }, done);
 };
 
