@@ -16,17 +16,30 @@ module.exports = exports = Forge;
 function Forge() {
     _.bindAll(this);
 
-    this.base = ''; // base path
-    this.input = 'content';
-    this.output = 'output';
-
     this.templates = {};
     this.pendingItems = [];
     this.items = _([]);
     this.routes = [];
     this.router = new Router(this.routes);
     this.generators = [];
+
+    this.ignoreDirs = ['node_modules', '.git', '.svn', '.hg', '/_templates'];
+    this.ignoreFiles = ['/_build.js', '/package.json', '.DS_Store'];
 }
+
+Forge.prototype = {
+    // Base path
+    basePath: '',
+
+    // Source/output dir
+    sourceDir: '.',
+    outputDir: '_output',
+
+    get templateDir() {
+        return path.join(this.sourceDir, '_templates');
+    }
+};
+
 
 // --- static ---
 
@@ -75,28 +88,57 @@ Forge.prototype.loadTemplates = function(folder) {
     }
 };
 
-Forge.prototype.compile = function() {
-    this.started = Date.now();
+Forge.prototype.compile = function(done) {
+    var app = this;
+
+    app.started = Date.now();
+
+    if (fs.existsSync(app.templateDir)) {
+        app.loadTemplates(app.templateDir);
+    }
+
     async.series([
-        this._traverse,
-        this._dispatch,
-        this._generate,
-        this._dispatch,
-        this._write
-    ], this._report);
+        app._traverse,
+        app._dispatch,
+        app._generate,
+        app._dispatch,
+        app._write,
+        app._report
+    ], done);
 };
 
 // --- private ---
 
 Forge.prototype._traverse = function(done) {
     var app = this;
-    this.tree = new Tree(this.input);
-    this.tree.traverse(function(source, stat, done) {
-        var route = source.substring(this.root.length);
-        var item = new Item(app, { route: route, source: source, stat: stat });
-        app.pendingItems.push(item);
+
+    var root = path.resolve(app.sourceDir);
+    var output = path.resolve(app.outputDir);
+    var tree = new Tree();
+    tree.onfile = function(source, stat, done) {
+        var route = source.substring(root.length);
+        var name = path.basename(route);
+        if (app.ignoreFiles.indexOf(route) < 0 && app.ignoreFiles.indexOf(name) < 0) {
+            var item = new Item(app, { route: route, source: source, stat: stat });
+            app.pendingItems.push(item);
+        }
         done();
-    }, done);
+    };
+    tree.ondir = function(source, stat, done) {
+        var route = source.substring(root.length);
+        var name = path.basename(route);
+        if (source !== output && app.ignoreDirs.indexOf(route) < 0 && app.ignoreDirs.indexOf(name) < 0) {
+            tree.walk(source, done);
+        } else {
+            done();
+        }
+    };
+    tree.walk(root, function() {
+        if (tree.errors.length) {
+            console.warn(tree.errors);
+        }
+        done();
+    });
 };
 
 Forge.prototype._dispatch = function(done) {
