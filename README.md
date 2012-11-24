@@ -1,11 +1,11 @@
-# Forge
+# Anvil
 
 Another static site generator.
 
 ```js
 #!/usr/bin/env node
-var Forge = require('forge');
-var app = new Forge();
+var Anvil = require('anvil');
+var app = new Anvil();
 
 app.ignore('/private/*');
 

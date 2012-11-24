@@ -12,8 +12,8 @@ var Tree = require('./lib/tree');
 
 require('./lib/tools');
 
-module.exports = exports = Forge;
-function Forge() {
+module.exports = exports = Anvil;
+function Anvil() {
     _.bindAll(this);
 
     this.templates = {};
@@ -27,7 +27,7 @@ function Forge() {
     this.ignoreFiles = ['/_build.js', '/package.json', '.DS_Store'];
 }
 
-Forge.prototype = {
+Anvil.prototype = {
     // Base path
     basePath: '',
 
@@ -43,39 +43,39 @@ Forge.prototype = {
 
 // --- static ---
 
-Forge.filter = require('./lib/filter');
-Forge.transform = require('./lib/transform');
+Anvil.filter = require('./lib/filter');
+Anvil.transform = require('./lib/transform');
 
 // --- public ---
 
-Forge.prototype.route = function(path) {
+Anvil.prototype.route = function(path) {
     for (var i = 1; i < arguments.length; i++) {
         this.router.push(new Route(path, arguments[i]));
     }
 };
 
-Forge.prototype.skip = function(path) {
+Anvil.prototype.skip = function(path) {
     this.route(path, function(item) { item.skip = true; });
 };
 
-Forge.prototype.ignore = function(path) {
+Anvil.prototype.ignore = function(path) {
     this.route(path, function(item) { item.ignore = true; });
 };
 
-Forge.prototype.generate = function(callback) {
+Anvil.prototype.generate = function(callback) {
     this.generators.push(callback);
 };
 
-Forge.prototype.create = function(props) {
+Anvil.prototype.create = function(props) {
     var item = new Item(this, props);
     this.pendingItems.push(item);
 };
 
-Forge.prototype.template = function(name, fn) {
+Anvil.prototype.template = function(name, fn) {
     this.templates[name] = fn;
 };
 
-Forge.prototype.loadTemplates = function(folder) {
+Anvil.prototype.loadTemplates = function(folder) {
     folder = path.resolve(folder);
     var files = fs.readdirSync(folder);
     for (var i = 0; i < files.length; i++) {
@@ -88,7 +88,7 @@ Forge.prototype.loadTemplates = function(folder) {
     }
 };
 
-Forge.prototype.compile = function(done) {
+Anvil.prototype.compile = function(done) {
     var app = this;
 
     app.started = Date.now();
@@ -109,7 +109,7 @@ Forge.prototype.compile = function(done) {
 
 // --- private ---
 
-Forge.prototype._traverse = function(done) {
+Anvil.prototype._traverse = function(done) {
     var app = this;
 
     var root = path.resolve(app.sourceDir);
@@ -141,7 +141,7 @@ Forge.prototype._traverse = function(done) {
     });
 };
 
-Forge.prototype._dispatch = function(done) {
+Anvil.prototype._dispatch = function(done) {
     var app = this;
 
     function iterate() {
@@ -163,7 +163,7 @@ Forge.prototype._dispatch = function(done) {
     iterate(null);
 };
 
-Forge.prototype._generate = function(done) {
+Anvil.prototype._generate = function(done) {
     async.forEachSeries(this.generators, function(generator, next) {
         if (generator.length >= 1) {
             generator(next);
@@ -174,13 +174,13 @@ Forge.prototype._generate = function(done) {
     }, done);
 };
 
-Forge.prototype._write = function(done) {
-    async.forEachSeries(this.items.value(), function(item, next) {
+Anvil.prototype._write = function(done) {
+    async.forEach(this.items.value(), function(item, next) {
         item.write(next);
     }, done);
 };
 
 
-Forge.prototype._report = function(err) {
+Anvil.prototype._report = function(err) {
     console.warn('Completed in %dms', Date.now() - this.started);
 };
