@@ -8,5 +8,3 @@ var pwd = process.env.PWD;
 var input = argv._[0] ? path.resolve(argv._[0]) : pwd;
 
 var app = require(path.join(input, '_build.js'));
-
-console.warn(app);
