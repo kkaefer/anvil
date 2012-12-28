@@ -45,6 +45,12 @@ Anvil.prototype = {
 
 Anvil.filter = require('./lib/filter');
 Anvil.transform = require('./lib/transform');
+Anvil.sort = require('./lib/sort');
+
+Anvil.Item = Item;
+Anvil.Route = Route;
+Anvil.Router = Router;
+Anvil.Tree = Tree;
 
 // --- public ---
 
