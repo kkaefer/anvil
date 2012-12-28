@@ -81,6 +81,34 @@ Anvil.prototype.template = function(name, fn) {
     this.templates[name] = fn;
 };
 
+Anvil.prototype.paginate = function(items, props) {
+    _.defaults(props, {
+        perPage: 8,
+        template: 'list',
+        metadata: {},
+        prefix: '/'
+    });
+
+    var app = this;
+    function link(page) {
+        return props.prefix + (page > 1 ? page + '/' : '');
+    }
+
+    items.paginate(props.perPage, function(items, page, pages) {
+        app.create({
+            route: link(page) + 'index.html',
+            template: props.template,
+            posts: items,
+            metadata: props.metadata,
+            pagination: {
+                previous: (page + 1 <= pages) ? link(page + 1) : null,
+                next: (page - 1 >= 1) ? link(page - 1) : null
+            }
+        });
+    });
+};
+
+
 Anvil.prototype.loadTemplates = function(folder) {
     folder = path.resolve(folder);
     var files = fs.readdirSync(folder);
