@@ -15,7 +15,7 @@
         "async": "~0.1.22",
         "underscore": "~1.4.2",
         "underscore.string": "~2.3.0",
-        "js-yaml": "~1.0.2",
+        "yamljs": "~0.1.4",
         "mkdirp": "~0.3.4",
         "optimist": "~0.3.5"
     }
