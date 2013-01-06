@@ -102,7 +102,10 @@ Anvil.prototype.paginate = function(items, props) {
             metadata: props.metadata,
             pagination: {
                 previous: (page + 1 <= pages) ? link(page + 1) : null,
-                next: (page - 1 >= 1) ? link(page - 1) : null
+                next: (page - 1 >= 1) ? link(page - 1) : null,
+                link: link,
+                current: page,
+                total: pages
             }
         });
     });
